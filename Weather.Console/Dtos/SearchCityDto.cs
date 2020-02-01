@@ -8,7 +8,7 @@ namespace Weather.ConsoleApp.Dtos
     {
         public int Id { get; set; }
         public string LocalizedName { get; set; }
-        public ParentCity ParentCity { get; set; }
+        public ParentCity ParentCity { get; set; } = new ParentCity();
 
         public string Key { get; set; }
     }

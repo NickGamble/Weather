@@ -59,7 +59,7 @@ namespace Weather.ConsoleApp.Tests
 
             _cityDataAccess.GetAllCities().Returns(new List<SearchCityDto> { SearchCityBuilder.Build(city1Name, state1Name, id1), SearchCityBuilder.Build(city2Name, state2Name, id2) });
 
-            // Act
+            // Act 
             _sut.WeatherLoop();
 
             // Assert
