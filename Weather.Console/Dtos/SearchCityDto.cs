@@ -6,6 +6,7 @@ namespace Weather.ConsoleApp.Dtos
 {
     public class SearchCityDto
     {
+        public int Id { get; set; }
         public string LocalizedName { get; set; }
         public ParentCity ParentCity { get; set; }
 

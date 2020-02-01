@@ -1,5 +1,6 @@
 ﻿using System;
 using Weather.ConsoleApp.ApiClients;
+using Weather.ConsoleApp.Database;
 
 namespace Weather.ConsoleApp
 {
@@ -8,8 +9,15 @@ namespace Weather.ConsoleApp
 
         static void Main(string[] args)
         {
-            var frontEndLogic = new FrontEndLogic(new AccuWeatherClient()); // TODO: Use IoC container to build up dependencies
-            frontEndLogic.WeatherLoop();
+            try
+            {
+                var frontEndLogic = new FrontEndLogic(new AccuWeatherClient(), new FileCityDataAccess()); // TODO: Use IoC container to build up dependencies
+                frontEndLogic.WeatherLoop();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Unexpected exception: {ex.Message}");
+            }
             
             Console.ReadLine();
 

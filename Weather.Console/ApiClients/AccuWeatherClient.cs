@@ -15,7 +15,7 @@ namespace Weather.ConsoleApp.ApiClients
         private const string BaseAddress = "http://dataservice.accuweather.com/";
 
         public List<SearchCityDto> CitySearch(string searchString)
-        {
+        {            
             var urlString = $"{BaseAddress}locations/v1/cities/AU/search?apikey={ApiKey}&q={searchString}";
             using (var httpClient = new HttpClient())
             {
