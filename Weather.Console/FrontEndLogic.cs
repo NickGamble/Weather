@@ -9,19 +9,23 @@ namespace Weather.ConsoleApp
 {
     public class FrontEndLogic
     {
+        private int? _loops;
         private readonly IWeatherClient _weatherClient;
         private readonly ICityDataAccess _cityDataAccess;
+        private readonly IConsoleWrapper _consoleWrapper;
 
-        public FrontEndLogic(IWeatherClient weatherClient, ICityDataAccess cityDataAccess)
+        public FrontEndLogic(IWeatherClient weatherClient, ICityDataAccess cityDataAccess, IConsoleWrapper consoleWrapper, int? loops = null)
         {
             _weatherClient = weatherClient;
             _cityDataAccess = cityDataAccess;
+            _consoleWrapper = consoleWrapper;
+            _loops = loops; // Avoid infinite loop for testing purposes. Yuck!
         }
 
         private void WelcomeMessage()
         {
-            Console.WriteLine("Welcome to the weather!");
-            Console.WriteLine("Please type the name of an Australian city and press enter");
+            _consoleWrapper.WriteLine("Welcome to the weather!");
+            _consoleWrapper.WriteLine("Please type the name of an Australian city and press enter");
 
             ListStoredCities();
             
@@ -31,23 +35,24 @@ namespace Weather.ConsoleApp
         {
             var allCities = _cityDataAccess.GetAllCities();
             if (allCities.Any())
-                Console.WriteLine("or type city number from list below and press enter");
+                _consoleWrapper.WriteLine("or type city number from list below and press enter");
 
             foreach (var city in allCities)
-                Console.WriteLine($"{city.Id}. {city.LocalizedName}, {city.ParentCity.LocalizedName}");
+                _consoleWrapper.WriteLine($"{city.Id}. {city.LocalizedName}, {city.ParentCity.LocalizedName}");
         }
 
         public void WeatherLoop()
         {
             WelcomeMessage();
 
-            
-            while (true)
+            int loopCount = 0;
+            while (_loops == null || _loops > loopCount)
             {
-                var citySearch = Console.ReadLine();
+                var citySearch = _consoleWrapper.ReadLine();
                 CitySearch(citySearch);
-                Console.WriteLine($"Please enter city name");
+                _consoleWrapper.WriteLine($"Please enter city name");
                 ListStoredCities();
+                loopCount++;
             }
         }
 
@@ -66,13 +71,13 @@ namespace Weather.ConsoleApp
             {
                 foreach (var city in results)
                 {
-                    Console.WriteLine($"City found: {city.LocalizedName}, {city.ParentCity.LocalizedName}");
-                    Console.WriteLine($"Getting current weather...");
+                    _consoleWrapper.WriteLine($"City found: {city.LocalizedName}, {city.ParentCity.LocalizedName}");
+                    _consoleWrapper.WriteLine($"Getting current weather...");
 
                     _cityDataAccess.SaveCity(city);
 
                     var weatherDto = _weatherClient.GetWeather(city.Key);
-                    Console.WriteLine($"{weatherDto.LocalObservationDateTime.ToShortTimeString()} - {weatherDto.LocalObservationDateTime.ToShortDateString()}{Environment.NewLine}" +
+                    _consoleWrapper.WriteLine($"{weatherDto.LocalObservationDateTime.ToShortTimeString()} - {weatherDto.LocalObservationDateTime.ToShortDateString()}{Environment.NewLine}" +
                                       $"{weatherDto.WeatherText} {weatherDto.Temperature.Metric.Value}{weatherDto.Temperature.Metric.Unit}{Environment.NewLine}");
 
 
@@ -80,7 +85,7 @@ namespace Weather.ConsoleApp
             }
             else
             {
-                Console.WriteLine("No results found.");
+                _consoleWrapper.WriteLine("No results found.");
             }
         }
     }
