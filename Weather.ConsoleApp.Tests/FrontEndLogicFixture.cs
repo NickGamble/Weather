@@ -66,18 +66,18 @@ namespace Weather.ConsoleApp.Tests
             _sut.WeatherLoop();
 
             // Assert
-            _consoleWrapper.Received(1).WriteLine("Welcome to the weather!"); 
-            _consoleWrapper.Received(1).WriteLine("Please type the name of an Australian city and press enter"); 
+            _consoleWrapper.Received(1).WriteLine("Welcome to the weather!");
+            _consoleWrapper.Received(1).WriteLine("Please type the name of an Australian city and press enter");
             _consoleWrapper.Received(2).WriteLine("or type city number from list below and press enter"); // Received again after no results found
             _consoleWrapper.Received(2).WriteLine($"{id1}. {city1Name}, {state1Name}"); // Received again after no results found
             _consoleWrapper.Received(2).WriteLine($"{id2}. {city2Name}, {state2Name}"); // Received again after no results found
             _consoleWrapper.Received(1).WriteLine("No results found.");
             _consoleWrapper.Received(1).WriteLine($"Please enter city name");
-            
+
         }
 
         [Test]
-        public void WeatherLoop_SuccessfulCitySearch_DisplaysWeatherDetails()
+        public void WeatherLoop_SuccessfulCitySearch_DisplaysWeatherDetailsAndSavesCity()
         {
             // Assemble
             var cityName = "TestCity";
@@ -100,17 +100,48 @@ namespace Weather.ConsoleApp.Tests
             _sut.WeatherLoop();
 
             // Assert
-            _consoleWrapper.Received(1).WriteLine("Welcome to the weather!");
-            _consoleWrapper.Received(1).WriteLine("Please type the name of an Australian city and press enter");
-            _consoleWrapper.Received(1).WriteLine($"City found: {cityName}, {stateName}");
-            _consoleWrapper.Received(1).WriteLine($"Getting current weather...");
-
             _cityDataAccess.Received(1).SaveCity(searchCityDto);
 
             _weatherClient.Received(1).GetWeather(key);
             _consoleWrapper.Received(1).WriteLine($"{weatherDto.LocalObservationDateTime.ToShortTimeString()} - {weatherDto.LocalObservationDateTime.ToShortDateString()}{Environment.NewLine}" +
                               $"{weatherDto.WeatherText} {weatherDto.Temperature.Metric.Value}{weatherDto.Temperature.Metric.Unit}{Environment.NewLine}");
 
+        }
+
+        [Test]
+        public void WeatherLoop_EnterStoredCityId_DisplaysWeatherDetailsCallsSaveCity()
+        {
+            // Assemble
+            var cityName = "TestCity";
+            var stateName = "TestState";
+            var id = 1;
+            var key = "ABC";
+            var searchCityDto = SearchCityBuilder.Build(cityName, stateName, id, key);
+
+            var weatherDate = DateTime.Now;
+            var weatherDescription = "Sunny and cloudy and rainy and dry";
+            var tempValue = "24";
+            var tempUnit = "C";
+            var weatherDto = CurrentWeatherBuilder.Build(weatherDescription, tempValue, tempUnit, weatherDate);
+
+            _cityDataAccess.GetAllCities().Returns(new List<SearchCityDto> { searchCityDto });
+            _consoleWrapper.ReadLine().Returns(id.ToString());
+            _weatherClient.GetWeather(key).Returns(weatherDto);
+
+            // Act 
+            _sut.WeatherLoop();
+
+            // Assert
+            _consoleWrapper.Received(1).WriteLine("Welcome to the weather!");
+            _consoleWrapper.Received(1).WriteLine("Please type the name of an Australian city and press enter");
+            _consoleWrapper.Received(2).WriteLine("or type city number from list below and press enter");
+            _consoleWrapper.Received(1).WriteLine($"City found: {cityName}, {stateName}");
+            _consoleWrapper.Received(1).WriteLine($"Getting current weather...");
+            _cityDataAccess.Received(1).SaveCity(searchCityDto);
+
+            _weatherClient.Received(1).GetWeather(key);
+            _consoleWrapper.Received(1).WriteLine($"{weatherDto.LocalObservationDateTime.ToShortTimeString()} - {weatherDto.LocalObservationDateTime.ToShortDateString()}{Environment.NewLine}" +
+                              $"{weatherDto.WeatherText} {weatherDto.Temperature.Metric.Value}{weatherDto.Temperature.Metric.Unit}{Environment.NewLine}");
         }
     }
 }
