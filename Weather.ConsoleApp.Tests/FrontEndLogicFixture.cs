@@ -18,13 +18,13 @@ namespace Weather.ConsoleApp.Tests
         IWeatherClient _weatherClient;
         ICityDataAccess _cityDataAccess;
         IConsoleWrapper _consoleWrapper;
-        public FrontEndLogicFixture()
+
+        [SetUp]
+        public void Init()
         {
             _weatherClient = Substitute.For<IWeatherClient>();
             _cityDataAccess = Substitute.For<ICityDataAccess>();
             _consoleWrapper = Substitute.For<IConsoleWrapper>();
-
-            _sut = new FrontEndLogic(_weatherClient, _cityDataAccess, _consoleWrapper, 1);
 
             _weatherClient.CitySearch(Arg.Any<string>()).Returns(new List<SearchCityDto>());
             _weatherClient.GetWeather(Arg.Any<string>()).Returns(new CurrentWeatherDto());
@@ -32,6 +32,7 @@ namespace Weather.ConsoleApp.Tests
             _consoleWrapper.WriteLine(Arg.Any<string>());
             _consoleWrapper.ReadLine().Returns(string.Empty);
 
+            _sut = new FrontEndLogic(_weatherClient, _cityDataAccess, _consoleWrapper, 1);
         }
 
         [Test]
@@ -50,6 +51,8 @@ namespace Weather.ConsoleApp.Tests
         public void WeatherLoop_TwoCitiesStored_ShowsWelcomeMessage()
         {
             // Assemble
+            _sut = new FrontEndLogic(_weatherClient, _cityDataAccess, _consoleWrapper, 1);
+
             var city1Name = "Bayswater";
             var state1Name = "WA";
             var id1 = 1;
@@ -71,6 +74,43 @@ namespace Weather.ConsoleApp.Tests
             _consoleWrapper.Received(1).WriteLine("No results found.");
             _consoleWrapper.Received(1).WriteLine($"Please enter city name");
             
+        }
+
+        [Test]
+        public void WeatherLoop_SuccessfulCitySearch_DisplaysWeatherDetails()
+        {
+            // Assemble
+            var cityName = "TestCity";
+            var stateName = "TestState";
+            var id = 1;
+            var key = "ABC";
+            var searchCityDto = SearchCityBuilder.Build(cityName, stateName, id, key);
+
+            var weatherDate = DateTime.Now;
+            var weatherDescription = "Sunny and cloudy and rainy and dry";
+            var tempValue = "24";
+            var tempUnit = "C";
+            var weatherDto = CurrentWeatherBuilder.Build(weatherDescription, tempValue, tempUnit, weatherDate);
+
+            _weatherClient.CitySearch(cityName).Returns(new List<SearchCityDto> { searchCityDto });
+            _consoleWrapper.ReadLine().Returns(cityName);
+            _weatherClient.GetWeather(key).Returns(weatherDto);
+
+            // Act 
+            _sut.WeatherLoop();
+
+            // Assert
+            _consoleWrapper.Received(1).WriteLine("Welcome to the weather!");
+            _consoleWrapper.Received(1).WriteLine("Please type the name of an Australian city and press enter");
+            _consoleWrapper.Received(1).WriteLine($"City found: {cityName}, {stateName}");
+            _consoleWrapper.Received(1).WriteLine($"Getting current weather...");
+
+            _cityDataAccess.Received(1).SaveCity(searchCityDto);
+
+            _weatherClient.Received(1).GetWeather(key);
+            _consoleWrapper.Received(1).WriteLine($"{weatherDto.LocalObservationDateTime.ToShortTimeString()} - {weatherDto.LocalObservationDateTime.ToShortDateString()}{Environment.NewLine}" +
+                              $"{weatherDto.WeatherText} {weatherDto.Temperature.Metric.Value}{weatherDto.Temperature.Metric.Unit}{Environment.NewLine}");
+
         }
     }
 }
