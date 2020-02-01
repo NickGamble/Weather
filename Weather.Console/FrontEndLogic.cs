@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Weather.ConsoleApp.ApiClients;
 
 namespace Weather.ConsoleApp
@@ -16,31 +13,50 @@ namespace Weather.ConsoleApp
             _weatherClient = weatherClient;
         }
 
-        public void WelcomeMessage()
+        private void WelcomeMessage()
         {
             Console.WriteLine("Welcome to the weather!");
             Console.WriteLine("Please type the name of an Australian city and press enter");
         }
 
-        public void CitySearch(string searchString)
+        public void WeatherLoop()
+        {
+            WelcomeMessage();
+
+            
+            while (true)
+            {
+                var citySearch = Console.ReadLine();
+                CitySearch(citySearch);
+                Console.WriteLine($"Please enter city name");
+            }
+        }
+
+        private void CitySearch(string searchString)
         {
             try
             {
-                var result = _weatherClient.CitySearch(searchString);
-                var resultCount = result.Count;
-                if (resultCount == 1)
+                var results = _weatherClient.CitySearch(searchString);
+                if (results.Any())
                 {
-                    var city = result.Single();
-                    Console.WriteLine($"City found: {city.LocalizedName}, {city.ParentCity.LocalizedName}");
-                    Console.WriteLine($"Getting current weather...");
+                    foreach (var city in results)
+                    {
+                        Console.WriteLine($"City found: {city.LocalizedName}, {city.ParentCity.LocalizedName}");
+                        Console.WriteLine($"Getting current weather...");
 
-                    var weatherDto = _weatherClient.GetWeather(city.Key);
-                    Console.WriteLine(@$"{weatherDto.LocalObservationDateTime.ToShortTimeString()} - {weatherDto.LocalObservationDateTime.ToShortDateString()}{Environment.NewLine}{weatherDto.WeatherText} {weatherDto.Temperature.Metric.Value}{weatherDto.Temperature.Metric.Unit}");                    
+                        var weatherDto = _weatherClient.GetWeather(city.Key);
+                        Console.WriteLine($"{weatherDto.LocalObservationDateTime.ToShortTimeString()} - {weatherDto.LocalObservationDateTime.ToShortDateString()}{Environment.NewLine}" +
+                                          $"{weatherDto.WeatherText} {weatherDto.Temperature.Metric.Value}{weatherDto.Temperature.Metric.Unit}{Environment.NewLine}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No results found.");
                 }
             }
             catch(Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("Unexpected error");
             }
         }
     }

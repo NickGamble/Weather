@@ -9,9 +9,8 @@ namespace Weather.ConsoleApp
         static void Main(string[] args)
         {
             var frontEndLogic = new FrontEndLogic(new AccuWeatherClient()); // TODO: Use IoC container to build up dependencies
-            frontEndLogic.WelcomeMessage();            
-            var citySearch = Console.ReadLine();
-            frontEndLogic.CitySearch(citySearch);
+            frontEndLogic.WeatherLoop();
+            
             Console.ReadLine();
 
         }
