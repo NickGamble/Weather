@@ -4,7 +4,7 @@ namespace Weather.ConsoleApp.Dtos
 {
     public class CurrentWeatherDto
     {
-        public string LocalObservationDateTime { get; set; }
+        public DateTime LocalObservationDateTime { get; set; }
         public string WeatherText { get; set; }
 
         public Temperature Temperature { get; set; }

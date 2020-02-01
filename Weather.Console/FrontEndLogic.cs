@@ -31,11 +31,11 @@ namespace Weather.ConsoleApp
                 if (resultCount == 1)
                 {
                     var city = result.Single();
-                    Console.WriteLine($"City found: {city.LocalizedName},{city.ParentCity}");
+                    Console.WriteLine($"City found: {city.LocalizedName}, {city.ParentCity.LocalizedName}");
                     Console.WriteLine($"Getting current weather...");
 
                     var weatherDto = _weatherClient.GetWeather(city.Key);
-                    Console.WriteLine(@$"{weatherDto.LocalObservationDateTime}{Environment.NewLine}{weatherDto.WeatherText} {weatherDto.Temperature.Metric.Value}{weatherDto.Temperature.Metric.Unit}");                    
+                    Console.WriteLine(@$"{weatherDto.LocalObservationDateTime.ToShortTimeString()} - {weatherDto.LocalObservationDateTime.ToShortDateString()}{Environment.NewLine}{weatherDto.WeatherText} {weatherDto.Temperature.Metric.Value}{weatherDto.Temperature.Metric.Unit}");                    
                 }
             }
             catch(Exception ex)
